@@ -32,9 +32,10 @@ namespace ScoopBox.Test.PackageManager.Scoop.ScoopPackageManagerTests
             await scoopPackageManager.Process(options, CancellationToken.None);
 
             string expected = @"Write-Host Start executing scoop package manager
-Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+Invoke-Expression '& {$(irm get.scoop.sh)} -RunAsAdmin'
 scoop install git
 scoop bucket add extras
+scoop bucket add xkyii https://github.com/xkyii/scoop-xkyii.git
 scoop bucket add nerd-fonts
 scoop bucket add nirsoft
 scoop bucket add java
