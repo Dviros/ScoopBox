@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -183,10 +183,17 @@ namespace ScoopBox
         /// </param>
         public async Task Process(IOptions options, CancellationToken cancellationToken = default)
         {
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Setting Execution Policy");
+            _sbScoopPackageManagerBuilder.AppendLine("Set-ExecutionPolicy Bypass -Force");
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Installing PWSH 7");
+            _sbScoopPackageManagerBuilder.AppendLine("irm https://aka.ms/install-powershell.ps1 > $env:TEMP\\runme.ps1; C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\Temp\\runme.ps1 -UseMSI -Quiet -AddExplorerContextMenu");
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Downloading VT-CLI");
+            _sbScoopPackageManagerBuilder.AppendLine("iwr https://github.com/VirusTotal/vt-cli/releases/download/0.10.4/Windows64.zip -outfile C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\Temp\\vt-cli.zip; Expand-Archive -Path C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\Temp\\vt-cli.zip -DestinationPath C:\\Users\\WDAGUtilityAccount\\Desktop");
+            _sbScoopPackageManagerBuilder.AppendLine("echo apikey = '<apikeyhere>' >> C:\\Users\\WDAGUtilityAccount\\.vt.toml");
             _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Start executing scoop package manager");
-            _sbScoopPackageManagerBuilder.AppendLine("Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')");
+            _sbScoopPackageManagerBuilder.AppendLine("irm https://get.scoop.sh > $env:TEMP\\install.ps1; C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\Temp\\install.ps1 -RunAsAdmin");
             _sbScoopPackageManagerBuilder.AppendLine("scoop install git");
-
+            _sbScoopPackageManagerBuilder.AppendLine("scoop bucket add xkyii https://github.com/xkyii/scoop-xkyii.git");
             _sbScoopPackageManagerBuilder.AppendLine("scoop bucket add extras");
             _sbScoopPackageManagerBuilder.AppendLine("scoop bucket add nerd-fonts");
             _sbScoopPackageManagerBuilder.AppendLine("scoop bucket add nirsoft");
@@ -197,13 +204,19 @@ namespace ScoopBox
 
             _sbScoopPackageManagerBuilder.Append("scoop install").Append(" ").AppendLine(string.Join(" ", Applications));
             _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Finished executing scoop package manager");
-
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Copying shortcuts");
+            _sbScoopPackageManagerBuilder.AppendLine("copy-item -path 'C:\\Users\\WDAGUtilityAccount\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\*' -destination  C:\\Users\\WDAGUtilityAccount\\Desktop -Recurse -force");
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Installing Office");
+            _sbScoopPackageManagerBuilder.AppendLine("C:\\Users\\WDAGUtilityAccount\\Desktop\\setups\\setup.exe /configure C:\\Users\\WDAGUtilityAccount\\Desktop\\setups\\Config.xml");
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Done!");
+            _sbScoopPackageManagerBuilder.AppendLine(@"Write-Host Dont forget to install npcap using 'C:\Users\WDAGUtilityAccount\scoop\apps\wireshark\current\npcap-installer.exe' and vcredist if needed");
             string fullScriptPath = Path.Combine(options.RootFilesDirectoryLocation, _packageManagerScriptName);
             byte[] content = new UTF8Encoding().GetBytes(_sbScoopPackageManagerBuilder.ToString());
 
             await _writeAllBytesAsync(fullScriptPath, content, cancellationToken);
 
             ScriptFile = new FileInfo(fullScriptPath);
+            
         }
     }
 }
